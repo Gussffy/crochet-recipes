@@ -1,0 +1,54 @@
+version: '3.8'
+
+# ============================================================
+# Compose para DESENVOLVIMENTO LOCAL
+# Sobe apenas MongoDB e Mongo Express.
+# A aplicação roda direto na sua máquina via: mvn spring-boot:run
+# ============================================================
+
+services:
+
+  mongo:
+    image: mongo:7.0
+    container_name: crochet-mongo-dev
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=crochet_recipes
+    volumes:
+      - mongo-dev-data:/data/db
+    networks:
+      - crochet-dev-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: crochet-mongo-express-dev
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin123
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - crochet-dev-network
+    restart: unless-stopped
+
+networks:
+  crochet-dev-network:
+    driver: bridge
+
+volumes:
+  mongo-dev-data:
+    driver: local

@@ -1,0 +1,10 @@
+target/
+*.class
+*.log
+.git
+.gitignore
+.mvn/wrapper/maven-wrapper.jar
+**/.DS_Store
+**/node_modules
+*.md
+docker-compose*.yml
