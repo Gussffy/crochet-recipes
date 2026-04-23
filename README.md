@@ -1,5 +1,7 @@
 # 🧶 Receitas de Crochê API
 
+Fiz esse projeto para minha namorada ela faz amigurumis e crochês, e pensando nisso pensei na solução de gerenciamento e publicação das receitas de crochês dela.
+
 Sistema completo para publicação e gerenciamento de receitas de crochê, desenvolvido com **Spring Boot**, **MongoDB** e **Docker**.
 
 ---
