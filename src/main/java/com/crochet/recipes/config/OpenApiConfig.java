@@ -17,7 +17,7 @@ public class OpenApiConfig {
     public OpenAPI crochetRecipesOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("🧶 API de Receitas de Crochê")
+                        .title("API de Receitas de Crochê")
                         .description("""
                                 Sistema para publicação e gerenciamento de receitas de crochê.
                                 
