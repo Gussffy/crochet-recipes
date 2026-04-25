@@ -26,13 +26,11 @@ public class OpenApiConfig {
                                 - Cada parte possui título, instruções em texto e imagem (Base64)
                                 - Imagem de capa para a receita
                                 - Filtros por autor, dificuldade, tags e pesquisa por keyword
-                                
-                                Níveis de dificuldade: INICIANTE, INTERMEDIARIO, AVANCADO
                                 """)
                         .version("1.0.0")
                         .contact(new Contact()
-                                .name("Receitas de Crochê")
-                                .email("contato@crochetreceitas.com.br"))
+                                .name("Crochet Recipes API")
+                                .email("gsf34062@gmail.com"))
                         .license(new License()
                                 .name("MIT License")))
                 .servers(List.of(
