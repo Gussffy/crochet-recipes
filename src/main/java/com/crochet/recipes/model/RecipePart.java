@@ -2,10 +2,13 @@ package com.crochet.recipes.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import java.util.List;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,7 +18,7 @@ public class RecipePart {
 
     private String title;
 
-    private String instructions;
+    private List<Round> rounds;
 
     private String imageBase64;
 

@@ -11,10 +11,10 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Material {
+public class Round {
 
-    private String name;
-    private String quantity;
-    private String color;
-    private String notes;
+    private Integer roundNumber;
+
+    private String description;
 }
+

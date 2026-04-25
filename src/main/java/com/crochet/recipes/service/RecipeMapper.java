@@ -4,8 +4,10 @@ import com.crochet.recipes.dto.*;
 import com.crochet.recipes.model.Material;
 import com.crochet.recipes.model.Recipe;
 import com.crochet.recipes.model.RecipePart;
+import com.crochet.recipes.model.Round;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -101,11 +103,11 @@ public class RecipeMapper {
                 .map(dto -> RecipePart.builder()
                         .order(dto.getOrder())
                         .title(dto.getTitle())
-                        .instructions(dto.getInstructions())
+                        .rounds(toRoundList(dto.getRounds()))
                         .imageBase64(dto.getImageBase64())
                         .imageContentType(dto.getImageContentType())
                         .build())
-                .sorted((a, b) -> Integer.compare(a.getOrder(), b.getOrder()))
+                .sorted(Comparator.comparingInt(RecipePart::getOrder))
                 .collect(Collectors.toList());
     }
 
@@ -115,9 +117,30 @@ public class RecipeMapper {
                 .map(p -> RecipePartDTO.builder()
                         .order(p.getOrder())
                         .title(p.getTitle())
-                        .instructions(p.getInstructions())
+                        .rounds(toRoundDTOList(p.getRounds()))
                         .imageBase64(p.getImageBase64())
                         .imageContentType(p.getImageContentType())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private List<Round> toRoundList(List<RoundDTO> dtos) {
+        if (dtos == null) return List.of();
+        return dtos.stream()
+                .map(dto -> Round.builder()
+                        .roundNumber(dto.getRoundNumber())
+                        .description(dto.getDescription())
+                        .build())
+                .sorted(Comparator.comparingInt(Round::getRoundNumber))
+                .collect(Collectors.toList());
+    }
+
+    private List<RoundDTO> toRoundDTOList(List<Round> rounds) {
+        if (rounds == null) return List.of();
+        return rounds.stream()
+                .map(r -> RoundDTO.builder()
+                        .roundNumber(r.getRoundNumber())
+                        .description(r.getDescription())
                         .build())
                 .collect(Collectors.toList());
     }

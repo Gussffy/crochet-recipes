@@ -1,12 +1,15 @@
 package com.crochet.recipes.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 @Data
 @Builder
@@ -21,8 +24,9 @@ public class RecipePartDTO {
     @NotBlank(message = "Título da parte é obrigatório")
     private String title;
 
-    @NotBlank(message = "Instruções da parte são obrigatórias")
-    private String instructions;
+    @NotEmpty(message = "Pelo menos uma volta (round) é obrigatória")
+    @Valid
+    private List<RoundDTO> rounds;
 
     private String imageBase64;
 
