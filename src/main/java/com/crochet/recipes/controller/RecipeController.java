@@ -22,7 +22,6 @@ import java.util.List;
 @RequestMapping("/api/v1/recipes")
 @RequiredArgsConstructor
 @Tag(name = "Receitas de Crochê", description = "API para gerenciamento de receitas de crochê")
-@CrossOrigin(origins = "*")
 public class RecipeController {
 
     private final RecipeService recipeService;

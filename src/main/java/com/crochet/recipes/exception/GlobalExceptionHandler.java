@@ -1,6 +1,9 @@
 package com.crochet.recipes.exception;
 
 import com.crochet.recipes.dto.ApiResponseDTO;
+import com.crochet.recipes.dto.ErrorDetailsDTO;
+import com.crochet.recipes.dto.ValidationErrorDTO;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,55 +12,174 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(RecipeNotFoundException.class)
-    public ResponseEntity<ApiResponseDTO<Void>> handleRecipeNotFound(RecipeNotFoundException ex) {
-        log.warn("Receita não encontrada: {}", ex.getMessage());
+    public ResponseEntity<ApiResponseDTO<ErrorDetailsDTO>> handleRecipeNotFound(
+            RecipeNotFoundException ex, HttpServletRequest request) {
+
+        String traceId = UUID.randomUUID().toString();
+        log.warn("[{}] Receita não encontrada: {}", traceId, ex.getMessage());
+
+        ErrorDetailsDTO details = ErrorDetailsDTO.builder()
+            .code("RECIPE_NOT_FOUND")
+            .message(ex.getMessage())
+            .httpStatus(404)
+            .timestamp(LocalDateTime.now())
+            .traceId(traceId)
+            .path(request.getRequestURI())
+            .build();
+
         return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponseDTO.error(ex.getMessage()));
+            .status(HttpStatus.NOT_FOUND)
+            .body(ApiResponseDTO.error(details));
+    }
+
+    @ExceptionHandler(DuplicateRecipeNameException.class)
+    public ResponseEntity<ApiResponseDTO<ErrorDetailsDTO>> handleDuplicateRecipe(
+            DuplicateRecipeNameException ex, HttpServletRequest request) {
+
+        String traceId = UUID.randomUUID().toString();
+        log.warn("[{}] Receita duplicada: {}", traceId, ex.getMessage());
+
+        ErrorDetailsDTO details = ErrorDetailsDTO.builder()
+            .code("DUPLICATE_RECIPE")
+            .message(ex.getMessage())
+            .httpStatus(409)
+            .timestamp(LocalDateTime.now())
+            .traceId(traceId)
+            .path(request.getRequestURI())
+            .hint("Tente usar um nome único para a receita")
+            .build();
+
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(ApiResponseDTO.error(details));
+    }
+
+    @ExceptionHandler(InvalidImageException.class)
+    public ResponseEntity<ApiResponseDTO<ErrorDetailsDTO>> handleInvalidImage(
+            InvalidImageException ex, HttpServletRequest request) {
+
+        String traceId = UUID.randomUUID().toString();
+        log.warn("[{}] Imagem inválida: {}", traceId, ex.getMessage());
+
+        ErrorDetailsDTO details = ErrorDetailsDTO.builder()
+            .code("INVALID_IMAGE")
+            .message(ex.getMessage())
+            .httpStatus(400)
+            .timestamp(LocalDateTime.now())
+            .traceId(traceId)
+            .path(request.getRequestURI())
+            .hint("Envie imagens em formato Base64 válido (JPEG, PNG, WebP, GIF). Máximo: 5MB")
+            .build();
+
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponseDTO.error(details));
+    }
+
+    @ExceptionHandler(DatabaseException.class)
+    public ResponseEntity<ApiResponseDTO<ErrorDetailsDTO>> handleDatabaseError(
+            DatabaseException ex, HttpServletRequest request) {
+
+        String traceId = UUID.randomUUID().toString();
+        log.error("[{}] Erro de banco de dados: {}", traceId, ex.getMessage(), ex.getCause());
+
+        ErrorDetailsDTO details = ErrorDetailsDTO.builder()
+            .code("DATABASE_ERROR")
+            .message("Erro ao acessar o banco de dados")
+            .httpStatus(503)
+            .timestamp(LocalDateTime.now())
+            .traceId(traceId)
+            .path(request.getRequestURI())
+            .hint("Tente novamente em alguns segundos")
+            .build();
+
+        return ResponseEntity
+            .status(HttpStatus.SERVICE_UNAVAILABLE)
+            .body(ApiResponseDTO.error(details));
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ApiResponseDTO<ErrorDetailsDTO>> handleRateLimitExceeded(
+            RateLimitExceededException ex, HttpServletRequest request) {
+
+        String traceId = UUID.randomUUID().toString();
+        log.warn("[{}] Rate limit excedido", traceId);
+
+        ErrorDetailsDTO details = ErrorDetailsDTO.builder()
+            .code("RATE_LIMIT_EXCEEDED")
+            .message(ex.getMessage())
+            .httpStatus(429)
+            .timestamp(LocalDateTime.now())
+            .traceId(traceId)
+            .path(request.getRequestURI())
+            .hint("Aguarde alguns minutos antes de tentar novamente")
+            .build();
+
+        return ResponseEntity
+            .status(HttpStatus.TOO_MANY_REQUESTS)
+            .body(ApiResponseDTO.error(details));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponseDTO<Map<String, String>>> handleValidationErrors(
-            MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponseDTO<ValidationErrorDTO>> handleValidationErrors(
+            MethodArgumentNotValidException ex, HttpServletRequest request) {
 
-        Map<String, String> errors = new HashMap<>();
+        String traceId = UUID.randomUUID().toString();
+        Map<String, String> fieldErrors = new HashMap<>();
+
         ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
+            fieldErrors.put(fieldName, errorMessage);
         });
 
-        log.warn("Erros de validação: {}", errors);
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponseDTO.<Map<String, String>>builder()
-                        .success(false)
-                        .message("Erro de validação nos dados enviados")
-                        .data(errors)
-                        .build());
-    }
+        log.warn("[{}] Erros de validação: {}", traceId, fieldErrors);
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiResponseDTO<Void>> handleIllegalArgument(IllegalArgumentException ex) {
-        log.warn("Argumento inválido: {}", ex.getMessage());
+        ValidationErrorDTO details = ValidationErrorDTO.builder()
+            .code("VALIDATION_ERROR")
+            .message("Erro de validação nos dados enviados")
+            .httpStatus(400)
+            .timestamp(LocalDateTime.now())
+            .traceId(traceId)
+            .path(request.getRequestURI())
+            .fieldErrors(fieldErrors)
+            .build();
+
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponseDTO.error(ex.getMessage()));
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponseDTO.error(details));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponseDTO<Void>> handleGenericException(Exception ex) {
-        log.error("Erro interno: ", ex);
+    public ResponseEntity<ApiResponseDTO<ErrorDetailsDTO>> handleGenericException(
+            Exception ex, HttpServletRequest request) {
+
+        String traceId = UUID.randomUUID().toString();
+        log.error("[{}] Erro inesperado em {}: {}", traceId, request.getRequestURI(), ex.getMessage(), ex);
+
+        ErrorDetailsDTO details = ErrorDetailsDTO.builder()
+            .code("INTERNAL_ERROR")
+            .message("Erro interno do servidor")
+            .httpStatus(500)
+            .timestamp(LocalDateTime.now())
+            .traceId(traceId)
+            .path(request.getRequestURI())
+            .hint("Entre em contato com suporte informando traceId: " + traceId)
+            .build();
+
         return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponseDTO.error("Erro interno do servidor. Tente novamente mais tarde."));
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ApiResponseDTO.error(details));
     }
 }

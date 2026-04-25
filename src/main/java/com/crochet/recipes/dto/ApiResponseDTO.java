@@ -40,4 +40,12 @@ public class ApiResponseDTO<T> {
                 .timestamp(LocalDateTime.now())
                 .build();
     }
+
+    public static <T> ApiResponseDTO<T> error(T data) {
+        return ApiResponseDTO.<T>builder()
+                .success(false)
+                .data(data)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
 }

@@ -20,9 +20,24 @@ public class RecipeService {
 
     private final RecipeRepository recipeRepository;
     private final RecipeMapper recipeMapper;
+    private final ImageValidationService imageValidationService;
 
     public RecipeResponseDTO createRecipe(RecipeRequestDTO requestDTO) {
         log.info("Criando nova receita: {}", requestDTO.getName());
+
+        imageValidationService.validateBase64Image(
+            requestDTO.getCoverImageBase64(),
+            requestDTO.getCoverImageContentType()
+        );
+
+        if (requestDTO.getParts() != null) {
+            requestDTO.getParts().forEach(part -> {
+                imageValidationService.validateBase64Image(
+                    part.getImageBase64(),
+                    part.getImageContentType()
+                );
+            });
+        }
 
         Recipe recipe = recipeMapper.toModel(requestDTO);
         Recipe saved = recipeRepository.save(recipe);
@@ -47,6 +62,22 @@ public class RecipeService {
 
     public RecipeResponseDTO updateRecipe(String id, RecipeRequestDTO requestDTO) {
         log.info("Atualizando receita ID: {}", id);
+        
+        // Validar imagem de capa
+        imageValidationService.validateBase64Image(
+            requestDTO.getCoverImageBase64(),
+            requestDTO.getCoverImageContentType()
+        );
+
+        // Validar imagens das partes
+        if (requestDTO.getParts() != null) {
+            requestDTO.getParts().forEach(part -> {
+                imageValidationService.validateBase64Image(
+                    part.getImageBase64(),
+                    part.getImageContentType()
+                );
+            });
+        }
 
         Recipe recipe = findRecipeOrThrow(id);
         recipeMapper.updateModel(recipe, requestDTO);
