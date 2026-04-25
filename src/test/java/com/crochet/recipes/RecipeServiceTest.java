@@ -199,7 +199,7 @@ class RecipeServiceTest {
                     .name("Teste")
                     .description("Teste")
                     .authorName("Test")
-                    .materials(List.of(MaterialDTO.builder().name("Lã").build()))
+                    .materials(List.of(MaterialDTO.builder().name("Lã").quantity("10g").build()))
                     .parts(List.of(RecipePartDTO.builder()
                             .order(1)
                             .title("Parte")
@@ -227,7 +227,7 @@ class RecipeServiceTest {
                     .name("Teste")
                     .description("Teste")
                     .authorName("Test")
-                    .materials(List.of(MaterialDTO.builder().name("Lã").build()))
+                    .materials(List.of(MaterialDTO.builder().name("Lã").quantity("10g").build()))
                     .parts(List.of(RecipePartDTO.builder()
                             .order(1)
                             .title("Parte")
@@ -237,6 +237,7 @@ class RecipeServiceTest {
                             .build()))
                     .build();
 
+            doNothing().when(imageValidationService).validateBase64Image(null, null);
             doThrow(new InvalidImageException("Imagem muito grande"))
                     .when(imageValidationService).validateBase64Image("invalidBase64", "image/jpeg");
 
@@ -332,7 +333,7 @@ class RecipeServiceTest {
 
         @Test
         @DisplayName("Deve mapear todos os elementos da lista com sucesso")
-        void shouldMapAllRecrusToSummaryDTOSuccessfully() {
+        void shouldMapAllRecipesToSummaryDTOSuccessfully() {
             List<Recipe> recipes = List.of(recipe, recipe2);
             RecipeSummaryDTO summary1 = RecipeSummaryDTO.builder().id(recipe.getId()).build();
             RecipeSummaryDTO summary2 = RecipeSummaryDTO.builder().id(recipe2.getId()).build();

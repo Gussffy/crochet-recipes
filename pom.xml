@@ -53,11 +53,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
-            <!--
-                Spring Boot 4.x já inclui Mockito 5.x com inline mocking
-                integrado ao mockito-core. NÃO adicione mockito-inline
-                separadamente — causa DuplicateMockitoExtensionException.
-            -->
+
         </dependency>
     </dependencies>
 
