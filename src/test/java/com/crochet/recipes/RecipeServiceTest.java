@@ -6,12 +6,14 @@ import com.crochet.recipes.dto.RecipeRequestDTO;
 import com.crochet.recipes.dto.RecipeResponseDTO;
 import com.crochet.recipes.dto.RecipeSummaryDTO;
 import com.crochet.recipes.dto.RoundDTO;
+import com.crochet.recipes.exception.InvalidImageException;
 import com.crochet.recipes.exception.RecipeNotFoundException;
 import com.crochet.recipes.model.Material;
 import com.crochet.recipes.model.Recipe;
 import com.crochet.recipes.model.RecipePart;
 import com.crochet.recipes.model.Round;
 import com.crochet.recipes.repository.RecipeRepository;
+import com.crochet.recipes.service.ImageValidationService;
 import com.crochet.recipes.service.RecipeMapper;
 import com.crochet.recipes.service.RecipeService;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +44,9 @@ class RecipeServiceTest {
 
     @Mock
     private RecipeMapper recipeMapper;
+
+    @Mock
+    private ImageValidationService imageValidationService;
 
     @InjectMocks
     private RecipeService recipeService;
@@ -160,6 +165,7 @@ class RecipeServiceTest {
                         assertThat(r.getName()).isEqualTo("Urso de Crochê");
                     });
             verify(recipeRepository, times(1)).save(any());
+            verify(imageValidationService, times(2)).validateBase64Image(any(), any());
         }
 
         @Test
@@ -184,6 +190,61 @@ class RecipeServiceTest {
 
             assertThat(result).isNotNull();
             verify(recipeRepository).save(any());
+        }
+
+        @Test
+        @DisplayName("Deve rejeitar receita com imagem de capa inválida")
+        void shouldRejectRecipeWithInvalidCoverImage() {
+            RecipeRequestDTO requestWithInvalidImage = RecipeRequestDTO.builder()
+                    .name("Teste")
+                    .description("Teste")
+                    .authorName("Test")
+                    .materials(List.of(MaterialDTO.builder().name("Lã").build()))
+                    .parts(List.of(RecipePartDTO.builder()
+                            .order(1)
+                            .title("Parte")
+                            .rounds(List.of(RoundDTO.builder().roundNumber(1).description("Test").build()))
+                            .build()))
+                    .coverImageBase64("xyz123")
+                    .coverImageContentType("image/png")
+                    .build();
+
+            doThrow(new InvalidImageException("Base64 inválido"))
+                    .when(imageValidationService).validateBase64Image("xyz123", "image/png");
+
+            assertThatThrownBy(() -> recipeService.createRecipe(requestWithInvalidImage))
+                    .isInstanceOf(InvalidImageException.class)
+                    .hasMessageContaining("Base64 inválido");
+
+            verify(imageValidationService).validateBase64Image("xyz123", "image/png");
+            verify(recipeRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Deve rejeitar receita com imagem de parte inválida")
+        void shouldRejectRecipeWithInvalidPartImage() {
+            RecipeRequestDTO requestWithInvalidPartImage = RecipeRequestDTO.builder()
+                    .name("Teste")
+                    .description("Teste")
+                    .authorName("Test")
+                    .materials(List.of(MaterialDTO.builder().name("Lã").build()))
+                    .parts(List.of(RecipePartDTO.builder()
+                            .order(1)
+                            .title("Parte")
+                            .rounds(List.of(RoundDTO.builder().roundNumber(1).description("Test").build()))
+                            .imageBase64("invalidBase64")
+                            .imageContentType("image/jpeg")
+                            .build()))
+                    .build();
+
+            doThrow(new InvalidImageException("Imagem muito grande"))
+                    .when(imageValidationService).validateBase64Image("invalidBase64", "image/jpeg");
+
+            assertThatThrownBy(() -> recipeService.createRecipe(requestWithInvalidPartImage))
+                    .isInstanceOf(InvalidImageException.class)
+                    .hasMessageContaining("Imagem muito grande");
+
+            verify(recipeRepository, never()).save(any());
         }
     }
 
@@ -311,6 +372,7 @@ class RecipeServiceTest {
             verify(recipeRepository).findById(recipeId);
             verify(recipeMapper).updateModel(recipe, updateDTO);
             verify(recipeRepository).save(recipe);
+            verify(imageValidationService, times(1)).validateBase64Image(any(), any());
         }
 
         @Test
@@ -322,7 +384,6 @@ class RecipeServiceTest {
             assertThatThrownBy(() -> recipeService.updateRecipe(invalidId, requestDTO))
                     .isInstanceOf(RecipeNotFoundException.class);
         }
-
 
         @Test
         @DisplayName("Deve atualizar parcialmente uma receita")
@@ -341,6 +402,25 @@ class RecipeServiceTest {
 
             assertThat(result).isNotNull();
             verify(recipeRepository).save(recipe);
+        }
+
+        @Test
+        @DisplayName("Deve rejeitar atualização com imagem inválida")
+        void shouldRejectUpdateWithInvalidImage() {
+            String recipeId = recipe.getId();
+            RecipeRequestDTO updateWithBadImage = RecipeRequestDTO.builder()
+                    .name("Teste")
+                    .coverImageBase64("badbase64")
+                    .coverImageContentType("image/png")
+                    .build();
+
+            doThrow(new InvalidImageException("Tipo de imagem não suportado"))
+                    .when(imageValidationService).validateBase64Image("badbase64", "image/png");
+
+            assertThatThrownBy(() -> recipeService.updateRecipe(recipeId, updateWithBadImage))
+                    .isInstanceOf(InvalidImageException.class);
+
+            verify(recipeRepository, never()).save(any());
         }
     }
 
