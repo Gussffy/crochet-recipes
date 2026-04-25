@@ -30,7 +30,6 @@ public class Recipe {
 
     private String authorName;
 
-    private String difficulty;
 
     private List<Material> materials;
 

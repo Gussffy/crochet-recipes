@@ -94,16 +94,6 @@ public class RecipeController {
                 recipes.size() + " receita(s) de " + authorName));
     }
 
-    @GetMapping("/difficulty/{difficulty}")
-    @Operation(summary = "Buscar receitas por dificuldade",
-               description = "Filtra por: INICIANTE, INTERMEDIARIO ou AVANCADO")
-    public ResponseEntity<ApiResponseDTO<List<RecipeSummaryDTO>>> getByDifficulty(
-            @Parameter(description = "Nível de dificuldade") @PathVariable String difficulty) {
-
-        List<RecipeSummaryDTO> recipes = recipeService.getRecipesByDifficulty(difficulty);
-        return ResponseEntity.ok(ApiResponseDTO.success(recipes,
-                recipes.size() + " receita(s) de nível " + difficulty));
-    }
 
     @GetMapping("/tags")
     @Operation(summary = "Buscar receitas por tags")

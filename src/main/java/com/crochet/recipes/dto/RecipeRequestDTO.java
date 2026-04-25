@@ -25,7 +25,6 @@ public class RecipeRequestDTO {
     @NotBlank(message = "Nome do autor é obrigatório")
     private String authorName;
 
-    private String difficulty;
 
     @NotEmpty(message = "A receita deve ter pelo menos um material")
     @Valid

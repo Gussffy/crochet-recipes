@@ -18,7 +18,6 @@ public class RecipeResponseDTO {
     private String name;
     private String description;
     private String authorName;
-    private String difficulty;
     private List<MaterialDTO> materials;
     private List<RecipePartDTO> parts;
     private String coverImageBase64;

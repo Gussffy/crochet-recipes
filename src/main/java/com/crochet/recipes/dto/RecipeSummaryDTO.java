@@ -18,7 +18,6 @@ public class RecipeSummaryDTO {
     private String name;
     private String description;
     private String authorName;
-    private String difficulty;
     private int totalParts;
     private int totalMaterials;
     private List<String> tags;

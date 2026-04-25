@@ -19,8 +19,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -60,7 +58,6 @@ class RecipeServiceTest {
                 .name("Urso de Crochê")
                 .description("Um urso fofo para presentear")
                 .authorName("Maria Silva")
-                .difficulty("INICIANTE")
                 .materials(List.of(
                         MaterialDTO.builder()
                                 .name("Lã Acrílica Bege")
@@ -88,7 +85,6 @@ class RecipeServiceTest {
                 .name("Urso de Crochê")
                 .description("Um urso fofo para presentear")
                 .authorName("Maria Silva")
-                .difficulty("INICIANTE")
                 .materials(List.of(
                         Material.builder()
                                 .name("Lã Acrílica Bege")
@@ -118,7 +114,6 @@ class RecipeServiceTest {
                 .name("Flor de Crochê")
                 .description("Uma flor delicada")
                 .authorName("Maria Silva")
-                .difficulty("INTERMEDIARIO")
                 .materials(List.of(
                         Material.builder()
                                 .name("Lã Acrílica Rosa")
@@ -136,14 +131,12 @@ class RecipeServiceTest {
                 .id("507f1f77bcf86cd799439011")
                 .name("Urso de Crochê")
                 .authorName("Maria Silva")
-                .difficulty("INICIANTE")
                 .build();
 
         summaryDTO = RecipeSummaryDTO.builder()
                 .id("507f1f77bcf86cd799439011")
                 .name("Urso de Crochê")
                 .authorName("Maria Silva")
-                .difficulty("INICIANTE")
                 .build();
     }
 
@@ -191,64 +184,6 @@ class RecipeServiceTest {
 
             assertThat(result).isNotNull();
             verify(recipeRepository).save(any());
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"INICIANTE", "INTERMEDIARIO", "AVANCADO"})
-        @DisplayName("Deve criar receita com diferentes níveis de dificuldade válidos")
-        void shouldCreateRecipeWithValidDifficaltiyLevels(String difficulty) {
-            requestDTO.setDifficulty(difficulty);
-            when(recipeMapper.toModel(requestDTO)).thenReturn(recipe);
-            when(recipeRepository.save(recipe)).thenReturn(recipe);
-            when(recipeMapper.toResponseDTO(recipe)).thenReturn(responseDTO);
-
-            assertThatNoException().isThrownBy(() -> recipeService.createRecipe(requestDTO));
-        }
-
-        @Test
-        @DisplayName("Deve permitir criar receita com dificuldade em minúscula")
-        void shouldCreateRecipeWithLowercaseDifficulty() {
-            requestDTO.setDifficulty("iniciante");
-            when(recipeMapper.toModel(requestDTO)).thenReturn(recipe);
-            when(recipeRepository.save(recipe)).thenReturn(recipe);
-            when(recipeMapper.toResponseDTO(recipe)).thenReturn(responseDTO);
-
-            assertThatNoException().isThrownBy(() -> recipeService.createRecipe(requestDTO));
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"EXPERT", "FACIL", "HARD", "INTERMEDIARIA", ""})
-        @DisplayName("Deve lançar exceção com dificuldades inválidas")
-        void shouldThrowExceptionWithInvalidDifficulty(String invalidDifficulty) {
-            requestDTO.setDifficulty(invalidDifficulty);
-
-            assertThatThrownBy(() -> recipeService.createRecipe(requestDTO))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Dificuldade inválida");
-        }
-
-        @Test
-        @DisplayName("Deve lançar exceção quando dificuldade é inválida na atualização")
-        void shouldThrowExceptionWithInvalidDifficultyOnUpdate() {
-            String recipeId = "507f1f77bcf86cd799439011";
-            requestDTO.setDifficulty("SUPER_EXPERT");
-
-            when(recipeRepository.findById(recipeId)).thenReturn(Optional.of(recipe));
-
-            assertThatThrownBy(() -> recipeService.updateRecipe(recipeId, requestDTO))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Dificuldade inválida");
-        }
-
-        @Test
-        @DisplayName("Deve permitir dificuldade nula na criação")
-        void shouldAllowNullDifficulty() {
-            requestDTO.setDifficulty(null);
-            when(recipeMapper.toModel(requestDTO)).thenReturn(recipe);
-            when(recipeRepository.save(recipe)).thenReturn(recipe);
-            when(recipeMapper.toResponseDTO(recipe)).thenReturn(responseDTO);
-
-            assertThatNoException().isThrownBy(() -> recipeService.createRecipe(requestDTO));
         }
     }
 
@@ -308,7 +243,6 @@ class RecipeServiceTest {
         @DisplayName("Deve retornar lista com múltiplas receitas ordenadas por data de criação")
         void shouldReturnAllRecipesOrderedByCreationDate() {
             List<Recipe> recipes = List.of(recipe2, recipe);
-            List<RecipeSummaryDTO> summaries = List.of(summaryDTO);
 
             when(recipeRepository.findAllByOrderByCreatedAtDesc()).thenReturn(recipes);
             when(recipeMapper.toSummaryDTO(any())).thenReturn(summaryDTO);
@@ -364,7 +298,6 @@ class RecipeServiceTest {
             String recipeId = recipe.getId();
             RecipeRequestDTO updateDTO = RecipeRequestDTO.builder()
                     .name("Urso Atualizado")
-                    .difficulty("INTERMEDIARIO")
                     .build();
 
             when(recipeRepository.findById(recipeId)).thenReturn(Optional.of(recipe));
@@ -390,21 +323,6 @@ class RecipeServiceTest {
                     .isInstanceOf(RecipeNotFoundException.class);
         }
 
-        @Test
-        @DisplayName("Deve validar dificuldade durante atualização")
-        void shouldValidateDifficultyDuringUpdate() {
-            String recipeId = recipe.getId();
-            RecipeRequestDTO updateDTO = RecipeRequestDTO.builder()
-                    .name("Novo Nome")
-                    .difficulty("IMPOSSIVEL")
-                    .build();
-
-            when(recipeRepository.findById(recipeId)).thenReturn(Optional.of(recipe));
-
-            assertThatThrownBy(() -> recipeService.updateRecipe(recipeId, updateDTO))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Dificuldade inválida");
-        }
 
         @Test
         @DisplayName("Deve atualizar parcialmente uma receita")
@@ -584,73 +502,6 @@ class RecipeServiceTest {
     }
 
     @Nested
-    @DisplayName("Testes de Busca por Dificuldade")
-    class GetRecipesByDifficultyTests {
-
-        @ParameterizedTest
-        @ValueSource(strings = {"INICIANTE", "INTERMEDIARIO", "AVANCADO"})
-        @DisplayName("Deve retornar receitas por dificuldade válida")
-        void shouldReturnRecipesByValidDifficulty(String difficulty) {
-            List<Recipe> difficultyRecipes = List.of(recipe);
-
-            when(recipeRepository.findByDifficulty(difficulty)).thenReturn(difficultyRecipes);
-            when(recipeMapper.toSummaryDTO(recipe)).thenReturn(summaryDTO);
-
-            List<RecipeSummaryDTO> result = recipeService.getRecipesByDifficulty(difficulty);
-
-            assertThat(result).hasSize(1);
-            verify(recipeRepository).findByDifficulty(difficulty);
-        }
-
-        @Test
-        @DisplayName("Deve converter dificuldade para maiúscula")
-        void shouldConvertDifficultyToUppercase() {
-            List<Recipe> recipes = List.of(recipe);
-            when(recipeRepository.findByDifficulty("INICIANTE")).thenReturn(recipes);
-            when(recipeMapper.toSummaryDTO(recipe)).thenReturn(summaryDTO);
-
-            recipeService.getRecipesByDifficulty("iniciante");
-
-            verify(recipeRepository).findByDifficulty("INICIANTE");
-        }
-
-        @Test
-        @DisplayName("Deve retornar lista vazia para dificuldade sem receitas")
-        void shouldReturnEmptyListForDifficultyWithoutRecipes() {
-            when(recipeRepository.findByDifficulty("AVANCADO")).thenReturn(List.of());
-
-            List<RecipeSummaryDTO> result = recipeService.getRecipesByDifficulty("AVANCADO");
-
-            assertThat(result).isEmpty();
-        }
-
-        @Test
-        @DisplayName("Deve lançar exceção com dificuldade inválida")
-        void shouldThrowExceptionWithInvalidDifficulty() {
-            assertThatThrownBy(() -> recipeService.getRecipesByDifficulty("IMPOSSIVEL"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Dificuldade inválida");
-
-            verify(recipeRepository, never()).findByDifficulty(any());
-        }
-
-        @Test
-        @DisplayName("Deve retornar múltiplas receitas com mesma dificuldade")
-        void shouldReturnMultipleRecipesWithSameDifficulty() {
-            List<Recipe> recipes = List.of(recipe, recipe2);
-            RecipeSummaryDTO summary2 = RecipeSummaryDTO.builder().id(recipe2.getId()).build();
-
-            when(recipeRepository.findByDifficulty("INTERMEDIARIO")).thenReturn(recipes);
-            when(recipeMapper.toSummaryDTO(recipe)).thenReturn(summaryDTO);
-            when(recipeMapper.toSummaryDTO(recipe2)).thenReturn(summary2);
-
-            List<RecipeSummaryDTO> result = recipeService.getRecipesByDifficulty("INTERMEDIARIO");
-
-            assertThat(result).hasSize(2);
-        }
-    }
-
-    @Nested
     @DisplayName("Testes de Busca por Tags")
     class GetRecipesByTagsTests {
 
@@ -716,45 +567,6 @@ class RecipeServiceTest {
             List<RecipeSummaryDTO> result = recipeService.getRecipesByTags(tags);
 
             assertThat(result).hasSize(1);
-        }
-    }
-
-    @Nested
-    @DisplayName("Testes de Validação de Dificuldade")
-    class DifficultyValidationTests {
-
-        @ParameterizedTest
-        @ValueSource(strings = {"INICIANTE", "INTERMEDIARIO", "AVANCADO", 
-                                 "iniciante", "intermediario", "avancado"})
-        @DisplayName("Deve aceitar dificuldades válidas em qualquer case")
-        void shouldAcceptValidDifficultiesInAnyCase(String difficulty) {
-            requestDTO.setDifficulty(difficulty);
-            when(recipeMapper.toModel(requestDTO)).thenReturn(recipe);
-            when(recipeRepository.save(recipe)).thenReturn(recipe);
-            when(recipeMapper.toResponseDTO(recipe)).thenReturn(responseDTO);
-
-            assertThatNoException().isThrownBy(() -> recipeService.createRecipe(requestDTO));
-        }
-
-        @ParameterizedTest
-        @ValueSource(strings = {"PRINCIPIANTE", "MEDIO", "PROFISSIONAL", "123", "FACIL"})
-        @DisplayName("Deve rejeitar dificuldades inválidas")
-        void shouldRejectInvalidDifficulties(String invalidDifficulty) {
-            requestDTO.setDifficulty(invalidDifficulty);
-
-            assertThatThrownBy(() -> recipeService.createRecipe(requestDTO))
-                    .isInstanceOf(IllegalArgumentException.class);
-        }
-
-        @Test
-        @DisplayName("Deve aceitar dificuldade nula")
-        void shouldAcceptNullDifficulty() {
-            requestDTO.setDifficulty(null);
-            when(recipeMapper.toModel(requestDTO)).thenReturn(recipe);
-            when(recipeRepository.save(recipe)).thenReturn(recipe);
-            when(recipeMapper.toResponseDTO(recipe)).thenReturn(responseDTO);
-
-            assertThatNoException().isThrownBy(() -> recipeService.createRecipe(requestDTO));
         }
     }
 }

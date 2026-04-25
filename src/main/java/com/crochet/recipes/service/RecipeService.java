@@ -23,7 +23,6 @@ public class RecipeService {
 
     public RecipeResponseDTO createRecipe(RecipeRequestDTO requestDTO) {
         log.info("Criando nova receita: {}", requestDTO.getName());
-        validateDifficulty(requestDTO.getDifficulty());
 
         Recipe recipe = recipeMapper.toModel(requestDTO);
         Recipe saved = recipeRepository.save(recipe);
@@ -48,7 +47,6 @@ public class RecipeService {
 
     public RecipeResponseDTO updateRecipe(String id, RecipeRequestDTO requestDTO) {
         log.info("Atualizando receita ID: {}", id);
-        validateDifficulty(requestDTO.getDifficulty());
 
         Recipe recipe = findRecipeOrThrow(id);
         recipeMapper.updateModel(recipe, requestDTO);
@@ -81,15 +79,6 @@ public class RecipeService {
                 .collect(Collectors.toList());
     }
 
-    public List<RecipeSummaryDTO> getRecipesByDifficulty(String difficulty) {
-        log.info("Buscando receitas por dificuldade: {}", difficulty);
-        validateDifficulty(difficulty);
-        return recipeRepository.findByDifficulty(difficulty.toUpperCase())
-                .stream()
-                .map(recipeMapper::toSummaryDTO)
-                .collect(Collectors.toList());
-    }
-
     public List<RecipeSummaryDTO> getRecipesByTags(List<String> tags) {
         log.info("Buscando receitas por tags: {}", tags);
         return recipeRepository.findByTagsIn(tags)
@@ -101,15 +90,5 @@ public class RecipeService {
     private Recipe findRecipeOrThrow(String id) {
         return recipeRepository.findById(id)
                 .orElseThrow(() -> new RecipeNotFoundException(id));
-    }
-
-    private void validateDifficulty(String difficulty) {
-        if (difficulty != null) {
-            List<String> valid = List.of("INICIANTE", "INTERMEDIARIO", "AVANCADO");
-            if (!valid.contains(difficulty.toUpperCase())) {
-                throw new IllegalArgumentException(
-                        "Dificuldade inválida. Use: INICIANTE, INTERMEDIARIO ou AVANCADO");
-            }
-        }
     }
 }

@@ -19,7 +19,6 @@ public class RecipeMapper {
                 .name(dto.getName())
                 .description(dto.getDescription())
                 .authorName(dto.getAuthorName())
-                .difficulty(dto.getDifficulty())
                 .materials(toMaterialList(dto.getMaterials()))
                 .parts(toPartList(dto.getParts()))
                 .coverImageBase64(dto.getCoverImageBase64())
@@ -34,7 +33,6 @@ public class RecipeMapper {
                 .name(recipe.getName())
                 .description(recipe.getDescription())
                 .authorName(recipe.getAuthorName())
-                .difficulty(recipe.getDifficulty())
                 .materials(toMaterialDTOList(recipe.getMaterials()))
                 .parts(toPartDTOList(recipe.getParts()))
                 .coverImageBase64(recipe.getCoverImageBase64())
@@ -51,7 +49,6 @@ public class RecipeMapper {
                 .name(recipe.getName())
                 .description(recipe.getDescription())
                 .authorName(recipe.getAuthorName())
-                .difficulty(recipe.getDifficulty())
                 .totalParts(recipe.getParts() != null ? recipe.getParts().size() : 0)
                 .totalMaterials(recipe.getMaterials() != null ? recipe.getMaterials().size() : 0)
                 .tags(recipe.getTags())
@@ -65,7 +62,6 @@ public class RecipeMapper {
         recipe.setName(dto.getName());
         recipe.setDescription(dto.getDescription());
         recipe.setAuthorName(dto.getAuthorName());
-        recipe.setDifficulty(dto.getDifficulty());
         recipe.setMaterials(toMaterialList(dto.getMaterials()));
         recipe.setParts(toPartList(dto.getParts()));
         recipe.setCoverImageBase64(dto.getCoverImageBase64());
