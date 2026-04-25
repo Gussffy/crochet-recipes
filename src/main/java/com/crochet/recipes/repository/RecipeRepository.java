@@ -12,8 +12,6 @@ public interface RecipeRepository extends MongoRepository<Recipe, String> {
 
     List<Recipe> findByAuthorNameIgnoreCase(String authorName);
 
-    List<Recipe> findByDifficulty(String difficulty);
-
     @Query("{ 'tags': { $in: ?0 } }")
     List<Recipe> findByTagsIn(List<String> tags);
 

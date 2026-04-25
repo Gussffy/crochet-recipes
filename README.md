@@ -1,5 +1,7 @@
 # Receitas de Croche API
 
+Estou desenvolvendo esse projeto para minha namorada e esse é o instagram de artesanato dela -> [Lailly](https://www.instagram.com/laillycrafts?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==) 
+
 Sistema para publicacao e gerenciamento de receitas de croche com Spring Boot, MongoDB e Docker.
 
 ---
@@ -75,7 +77,7 @@ mvn spring-boot:run
 {
   "name": "Urso Amigurumi",
   "description": "Urso fofo para presente",
-  "authorName": "Maria Silva",
+  "authorName": "Lailly",
   "tags": ["urso", "amigurumi", "brinquedo"],
   "coverImageBase64": "data:image/jpeg;base64,/9j/4AAQ...",
   "coverImageContentType": "image/jpeg",
@@ -123,7 +125,7 @@ mvn spring-boot:run
     "id": "65f1a2b3c4d5e6f7a8b9c0d1",
     "name": "Urso Amigurumi",
     "description": "Urso fofo para presente",
-    "authorName": "Maria Silva",
+    "authorName": "Lailly",
     "materials": [],
     "parts": [
       {
