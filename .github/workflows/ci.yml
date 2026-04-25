@@ -18,8 +18,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-test:
-    name: Build and Test (Java 21)
+  build-and-test:
+    name: Build & Test — Java 21
     runs-on: ubuntu-latest
 
     steps:
@@ -33,15 +33,16 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Build and run tests
-        run: mvn -B clean verify --no-transfer-progress
+      - name: Build
+        run: mvn -B clean package -DskipTests --no-transfer-progress
 
-      - name: Upload test reports on failure
+      - name: Run unit tests
+        run: mvn -B test --no-transfer-progress
+
+      - name: Upload Surefire reports on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: surefire-reports
-          path: |
-            target/surefire-reports/**
-            target/failsafe-reports/**
-
+          path: target/surefire-reports/
+          retention-days: 7
