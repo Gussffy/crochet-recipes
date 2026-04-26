@@ -181,7 +181,7 @@ crochet-recipes/
 |  `- service/
 |     |- RecipeService.java
 |     `- RecipeMapper.java
-`- src/test/java/com/crochet/recipes/RecipeServiceTest.java
+`- src/test/java/com/crochet/recipes/recipes/RecipeServiceTest.java
 ```
 
 ---

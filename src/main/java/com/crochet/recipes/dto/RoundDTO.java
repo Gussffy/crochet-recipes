@@ -1,5 +1,6 @@
 package com.crochet.recipes.dto;
 
+import com.crochet.recipes.config.NoMongoInjection;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -19,6 +20,7 @@ public class RoundDTO {
     private Integer roundNumber;
 
     @NotBlank(message = "Descrição da volta é obrigatória")
+    @NoMongoInjection
     private String description;
 }
 

@@ -65,28 +65,6 @@ public class GlobalExceptionHandler {
             .body(ApiResponseDTO.error(details));
     }
 
-    @ExceptionHandler(InvalidImageException.class)
-    public ResponseEntity<ApiResponseDTO<ErrorDetailsDTO>> handleInvalidImage(
-            InvalidImageException ex, HttpServletRequest request) {
-
-        String traceId = UUID.randomUUID().toString();
-        log.warn("[{}] Imagem inválida: {}", traceId, ex.getMessage());
-
-        ErrorDetailsDTO details = ErrorDetailsDTO.builder()
-            .code("INVALID_IMAGE")
-            .message(ex.getMessage())
-            .httpStatus(400)
-            .timestamp(LocalDateTime.now())
-            .traceId(traceId)
-            .path(request.getRequestURI())
-            .hint("Envie imagens em formato Base64 válido (JPEG, PNG, WebP, GIF). Máximo: 5MB")
-            .build();
-
-        return ResponseEntity
-            .status(HttpStatus.BAD_REQUEST)
-            .body(ApiResponseDTO.error(details));
-    }
-
     @ExceptionHandler(DatabaseException.class)
     public ResponseEntity<ApiResponseDTO<ErrorDetailsDTO>> handleDatabaseError(
             DatabaseException ex, HttpServletRequest request) {
@@ -106,28 +84,6 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
             .status(HttpStatus.SERVICE_UNAVAILABLE)
-            .body(ApiResponseDTO.error(details));
-    }
-
-    @ExceptionHandler(RateLimitExceededException.class)
-    public ResponseEntity<ApiResponseDTO<ErrorDetailsDTO>> handleRateLimitExceeded(
-            RateLimitExceededException ex, HttpServletRequest request) {
-
-        String traceId = UUID.randomUUID().toString();
-        log.warn("[{}] Rate limit excedido", traceId);
-
-        ErrorDetailsDTO details = ErrorDetailsDTO.builder()
-            .code("RATE_LIMIT_EXCEEDED")
-            .message(ex.getMessage())
-            .httpStatus(429)
-            .timestamp(LocalDateTime.now())
-            .traceId(traceId)
-            .path(request.getRequestURI())
-            .hint("Aguarde alguns minutos antes de tentar novamente")
-            .build();
-
-        return ResponseEntity
-            .status(HttpStatus.TOO_MANY_REQUESTS)
             .body(ApiResponseDTO.error(details));
     }
 

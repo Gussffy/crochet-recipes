@@ -1,5 +1,6 @@
 package com.crochet.recipes.dto;
 
+import com.crochet.recipes.config.NoMongoInjection;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -22,6 +23,7 @@ public class RecipePartDTO {
     private Integer order;
 
     @NotBlank(message = "Título da parte é obrigatório")
+    @NoMongoInjection
     private String title;
 
     @NotEmpty(message = "Pelo menos uma volta (round) é obrigatória")
