@@ -31,6 +31,17 @@ Sistema para publicacao e gerenciamento de receitas de croche com Spring Boot, M
 
 ---
 
+## 🎯 Melhorias recentes
+
+- ✅ **DTOs como Records** — Imutabilidade garantida, menos boilerplate
+- ✅ **Mapper dividido** — `RecipeRequestMapper` e `RecipeResponseMapper` com responsabilidades bem definidas
+- ✅ **Estrutura organizada** — DTOs separados em `request/`, `response/` e `error/`
+- ✅ **Models na pasta `embedded/`** — Melhor organização de componentes
+- ✅ **Exceptions limpas** — Removidas classes não utilizadas
+- ✅ **Testes atualizados** — Compatíveis com Records e novos mappers
+
+---
+
 ## Como executar
 
 ### Pre-requisitos
@@ -66,6 +77,30 @@ mvn spring-boot:run
 | `GET` | `/api/v1/recipes/search?keyword=...` | Pesquisar por texto |
 | `GET` | `/api/v1/recipes/author/{authorName}` | Filtrar por autor |
 | `GET` | `/api/v1/recipes/tags?tags=a,b` | Filtrar por tags |
+
+---
+
+## DTOs como Records
+
+Todos os DTOs do projeto utilizam **Java Records** (desde Java 21) para garantir:
+- ✅ Imutabilidade automática
+- ✅ Menos boilerplate (sem Lombok necessário para DTOs)
+- ✅ Melhor performance
+- ✅ Thread-safe por padrão
+
+**Exemplo:**
+```java
+public record RecipeRequestDTO(
+    @NotBlank String name,
+    @NotBlank String description,
+    @NotBlank String authorName,
+    @NotEmpty @Valid List<MaterialDTO> materials,
+    @NotEmpty @Valid List<RecipePartDTO> parts,
+    String coverImageBase64,
+    String coverImageContentType,
+    List<String> tags
+) {}
+```
 
 ---
 
@@ -166,23 +201,66 @@ crochet-recipes/
 |- docker-compose.dev.yml
 |- pom.xml
 |- src/main/java/com/crochet/recipes/
-|  |- controller/RecipeController.java
+|  |- CrochetRecipesApplication.java
+|  |- config/
+|  |  |- MongoConfig.java
+|  |  |- MongoInjectionValidator.java
+|  |  |- NoMongoInjection.java
+|  |  |- OpenApiConfig.java
+|  |  `- WebConfig.java
+|  |- controller/
+|  |  `- RecipeController.java
 |  |- dto/
-|  |  |- RecipeRequestDTO.java
-|  |  |- RecipeResponseDTO.java
-|  |  |- RecipeSummaryDTO.java
-|  |  |- RecipePartDTO.java
-|  |  `- RoundDTO.java
+|  |  |- request/
+|  |  |  |- RecipeRequestDTO.java (Record)
+|  |  |  |- MaterialDTO.java (Record)
+|  |  |  |- RecipePartDTO.java (Record)
+|  |  |  `- RoundDTO.java (Record)
+|  |  |- response/
+|  |  |  |- RecipeResponseDTO.java (Record)
+|  |  |  |- RecipeSummaryDTO.java (Record)
+|  |  |  `- ApiResponseDTO.java (Record)
+|  |  `- error/
+|  |     |- ErrorDetailsDTO.java (Record)
+|  |     `- ValidationErrorDTO.java (Record)
+|  |- exception/
+|  |  |- CrochetException.java
+|  |  |- GlobalExceptionHandler.java
+|  |  `- RecipeNotFoundException.java
+|  |- mapper/
+|  |  |- RecipeRequestMapper.java
+|  |  `- RecipeResponseMapper.java
 |  |- model/
 |  |  |- Recipe.java
-|  |  |- RecipePart.java
-|  |  `- Round.java
-|  |- repository/RecipeRepository.java
+|  |  `- embedded/
+|  |     |- Material.java
+|  |     |- RecipePart.java
+|  |     `- Round.java
+|  |- repository/
+|  |  `- RecipeRepository.java
 |  `- service/
-|     |- RecipeService.java
-|     `- RecipeMapper.java
-`- src/test/java/com/crochet/recipes/recipes/RecipeServiceTest.java
+|     `- RecipeService.java
+`- src/test/java/com/crochet/recipes/
+   `- RecipeServiceTest.java
 ```
+
+---
+
+## Arquitetura dos Mappers
+
+O projeto utiliza **dois mappers especializados** para melhor separação de responsabilidades:
+
+### `RecipeRequestMapper`
+Converte `RecipeRequestDTO` (request) → `Recipe` (model)
+- Converte DTOs em entities
+- Ordena partes por `order` e rounds por `roundNumber`
+- Atualiza models existentes
+
+### `RecipeResponseMapper`
+Converte `Recipe` (model) → DTOs de resposta
+- Converte models em `RecipeResponseDTO` (resposta detalhada)
+- Converte models em `RecipeSummaryDTO` (resposta resumida)
+- Calcula totais (partes, materiais)
 
 ---
 
@@ -201,4 +279,12 @@ Workflow em `.github/workflows/ci.yml` rodando em push e pull_request para `main
 ```bash
 mvn test
 ```
+
+Testes incluem:
+- ✅ Criação de receitas
+- ✅ Busca por ID, autor, tags e palavra-chave
+- ✅ Atualização e deleção
+- ✅ Validação de erros e exceções
+
+---
 
