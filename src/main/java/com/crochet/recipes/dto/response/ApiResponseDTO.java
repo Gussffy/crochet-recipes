@@ -1,24 +1,18 @@
-package com.crochet.recipes.dto;
+package com.crochet.recipes.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ApiResponseDTO<T> {
-
-    private boolean success;
-    private String message;
-    private T data;
-    private LocalDateTime timestamp;
+public record ApiResponseDTO<T>(
+    boolean success,
+    String message,
+    T data,
+    LocalDateTime timestamp
+) {
 
     public static <T> ApiResponseDTO<T> success(T data, String message) {
         return ApiResponseDTO.<T>builder()

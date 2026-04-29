@@ -1,8 +1,8 @@
 package com.crochet.recipes.exception;
 
-import com.crochet.recipes.dto.ApiResponseDTO;
-import com.crochet.recipes.dto.ErrorDetailsDTO;
-import com.crochet.recipes.dto.ValidationErrorDTO;
+import com.crochet.recipes.dto.response.ApiResponseDTO;
+import com.crochet.recipes.dto.error.ErrorDetailsDTO;
+import com.crochet.recipes.dto.error.ValidationErrorDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -43,49 +43,6 @@ public class GlobalExceptionHandler {
             .body(ApiResponseDTO.error(details));
     }
 
-    @ExceptionHandler(DuplicateRecipeNameException.class)
-    public ResponseEntity<ApiResponseDTO<ErrorDetailsDTO>> handleDuplicateRecipe(
-            DuplicateRecipeNameException ex, HttpServletRequest request) {
-
-        String traceId = UUID.randomUUID().toString();
-        log.warn("[{}] Receita duplicada: {}", traceId, ex.getMessage());
-
-        ErrorDetailsDTO details = ErrorDetailsDTO.builder()
-            .code("DUPLICATE_RECIPE")
-            .message(ex.getMessage())
-            .httpStatus(409)
-            .timestamp(LocalDateTime.now())
-            .traceId(traceId)
-            .path(request.getRequestURI())
-            .hint("Tente usar um nome único para a receita")
-            .build();
-
-        return ResponseEntity
-            .status(HttpStatus.CONFLICT)
-            .body(ApiResponseDTO.error(details));
-    }
-
-    @ExceptionHandler(DatabaseException.class)
-    public ResponseEntity<ApiResponseDTO<ErrorDetailsDTO>> handleDatabaseError(
-            DatabaseException ex, HttpServletRequest request) {
-
-        String traceId = UUID.randomUUID().toString();
-        log.error("[{}] Erro de banco de dados: {}", traceId, ex.getMessage(), ex.getCause());
-
-        ErrorDetailsDTO details = ErrorDetailsDTO.builder()
-            .code("DATABASE_ERROR")
-            .message("Erro ao acessar o banco de dados")
-            .httpStatus(503)
-            .timestamp(LocalDateTime.now())
-            .traceId(traceId)
-            .path(request.getRequestURI())
-            .hint("Tente novamente em alguns segundos")
-            .build();
-
-        return ResponseEntity
-            .status(HttpStatus.SERVICE_UNAVAILABLE)
-            .body(ApiResponseDTO.error(details));
-    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponseDTO<ValidationErrorDTO>> handleValidationErrors(

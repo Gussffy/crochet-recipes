@@ -1,18 +1,19 @@
 package com.crochet.recipes;
 
-import com.crochet.recipes.dto.MaterialDTO;
-import com.crochet.recipes.dto.RecipePartDTO;
-import com.crochet.recipes.dto.RecipeRequestDTO;
-import com.crochet.recipes.dto.RecipeResponseDTO;
-import com.crochet.recipes.dto.RecipeSummaryDTO;
-import com.crochet.recipes.dto.RoundDTO;
+import com.crochet.recipes.dto.request.MaterialDTO;
+import com.crochet.recipes.dto.request.RecipePartDTO;
+import com.crochet.recipes.dto.request.RecipeRequestDTO;
+import com.crochet.recipes.dto.response.RecipeResponseDTO;
+import com.crochet.recipes.dto.response.RecipeSummaryDTO;
+import com.crochet.recipes.dto.request.RoundDTO;
 import com.crochet.recipes.exception.RecipeNotFoundException;
-import com.crochet.recipes.model.Material;
+import com.crochet.recipes.model.embedded.Material;
 import com.crochet.recipes.model.Recipe;
-import com.crochet.recipes.model.RecipePart;
-import com.crochet.recipes.model.Round;
+import com.crochet.recipes.model.embedded.RecipePart;
+import com.crochet.recipes.model.embedded.Round;
 import com.crochet.recipes.repository.RecipeRepository;
-import com.crochet.recipes.service.RecipeMapper;
+import com.crochet.recipes.mapper.RecipeRequestMapper;
+import com.crochet.recipes.mapper.RecipeResponseMapper;
 import com.crochet.recipes.service.RecipeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,7 +42,10 @@ class RecipeServiceTest {
     private RecipeRepository recipeRepository;
 
     @Mock
-    private RecipeMapper recipeMapper;
+    private RecipeRequestMapper recipeRequestMapper;
+
+    @Mock
+    private RecipeResponseMapper recipeResponseMapper;
 
     @InjectMocks
     private RecipeService recipeService;
@@ -54,31 +58,36 @@ class RecipeServiceTest {
 
     @BeforeEach
     void setUp() {
-        requestDTO = RecipeRequestDTO.builder()
-                .name("Urso de Crochê")
-                .description("Um urso fofo para presentear")
-                .authorName("Maria Silva")
-                .materials(List.of(
-                        MaterialDTO.builder()
-                                .name("Lã Acrílica Bege")
-                                .quantity("100g")
-                                .color("Bege")
-                                .build()
-                ))
-                .parts(List.of(
-                        RecipePartDTO.builder()
-                                .order(1)
-                                .title("Parte 1 - Cabeça do Urso")
-                                .rounds(List.of(
-                                        RoundDTO.builder()
-                                                .roundNumber(1)
-                                                .description("Join to first ch with a SC, 15SC(16)")
-                                                .build()
-                                ))
-                                .build()
-                ))
-                .tags(List.of("urso", "amigurumi", "iniciante"))
-                .build();
+        requestDTO = new RecipeRequestDTO(
+                "Urso de Crochê",
+                "Um urso fofo para presentear",
+                "Maria Silva",
+                List.of(
+                        new MaterialDTO(
+                                "Lã Acrílica Bege",
+                                "100g",
+                                "Bege",
+                                null
+                        )
+                ),
+                List.of(
+                        new RecipePartDTO(
+                                1,
+                                "Parte 1 - Cabeça do Urso",
+                                List.of(
+                                        new RoundDTO(
+                                                1,
+                                                "Join to first ch with a SC, 15SC(16)"
+                                        )
+                                ),
+                                null,
+                                null
+                        )
+                ),
+                null,
+                null,
+                List.of("urso", "amigurumi", "iniciante")
+        );
 
         recipe = Recipe.builder()
                 .id("507f1f77bcf86cd799439011")
@@ -127,17 +136,32 @@ class RecipeServiceTest {
                 .updatedAt(LocalDateTime.now().minusDays(1))
                 .build();
 
-        responseDTO = RecipeResponseDTO.builder()
-                .id("507f1f77bcf86cd799439011")
-                .name("Urso de Crochê")
-                .authorName("Maria Silva")
-                .build();
+        responseDTO = new RecipeResponseDTO(
+                "507f1f77bcf86cd799439011",
+                "Urso de Crochê",
+                null,
+                "Maria Silva",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
 
-        summaryDTO = RecipeSummaryDTO.builder()
-                .id("507f1f77bcf86cd799439011")
-                .name("Urso de Crochê")
-                .authorName("Maria Silva")
-                .build();
+        summaryDTO = new RecipeSummaryDTO(
+                "507f1f77bcf86cd799439011",
+                "Urso de Crochê",
+                null,
+                "Maria Silva",
+                0,
+                0,
+                null,
+                null,
+                null,
+                null
+        );
     }
 
     @Nested
@@ -147,17 +171,17 @@ class RecipeServiceTest {
         @Test
         @DisplayName("Deve criar uma receita com sucesso")
         void shouldCreateRecipeSuccessfully() {
-            when(recipeMapper.toModel(requestDTO)).thenReturn(recipe);
+            when(recipeRequestMapper.toModel(requestDTO)).thenReturn(recipe);
             when(recipeRepository.save(recipe)).thenReturn(recipe);
-            when(recipeMapper.toResponseDTO(recipe)).thenReturn(responseDTO);
+            when(recipeResponseMapper.toResponseDTO(recipe)).thenReturn(responseDTO);
 
             RecipeResponseDTO result = recipeService.createRecipe(requestDTO);
 
             assertThat(result)
                     .isNotNull()
                     .satisfies(r -> {
-                        assertThat(r.getId()).isEqualTo("507f1f77bcf86cd799439011");
-                        assertThat(r.getName()).isEqualTo("Urso de Crochê");
+                        assertThat(r.id()).isEqualTo("507f1f77bcf86cd799439011");
+                        assertThat(r.name()).isEqualTo("Urso de Crochê");
                     });
             verify(recipeRepository, times(1)).save(any());
         }
@@ -165,19 +189,26 @@ class RecipeServiceTest {
         @Test
         @DisplayName("Deve criar receita com campos mínimos")
         void shouldCreateRecipeWithMinimalFields() {
-            RecipeRequestDTO minimalDTO = RecipeRequestDTO.builder()
-                    .name("Receita Mínima")
-                    .build();
+            RecipeRequestDTO minimalDTO = new RecipeRequestDTO(
+                    "Receita Mínima",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
 
             Recipe minimalRecipe = Recipe.builder()
                     .id("123")
                     .name("Receita Mínima")
                     .build();
 
-            when(recipeMapper.toModel(minimalDTO)).thenReturn(minimalRecipe);
+            when(recipeRequestMapper.toModel(minimalDTO)).thenReturn(minimalRecipe);
             when(recipeRepository.save(minimalRecipe)).thenReturn(minimalRecipe);
-            when(recipeMapper.toResponseDTO(minimalRecipe)).thenReturn(
-                    RecipeResponseDTO.builder().id("123").name("Receita Mínima").build()
+            when(recipeResponseMapper.toResponseDTO(minimalRecipe)).thenReturn(
+                    new RecipeResponseDTO("123", "Receita Mínima", null, null, null, null, null, null, null, null, null)
             );
 
             RecipeResponseDTO result = recipeService.createRecipe(minimalDTO);
@@ -195,18 +226,18 @@ class RecipeServiceTest {
         @DisplayName("Deve retornar receita ao buscar por ID válido")
         void shouldReturnRecipeWhenFoundById() {
             when(recipeRepository.findById(recipe.getId())).thenReturn(Optional.of(recipe));
-            when(recipeMapper.toResponseDTO(recipe)).thenReturn(responseDTO);
+            when(recipeResponseMapper.toResponseDTO(recipe)).thenReturn(responseDTO);
 
             RecipeResponseDTO result = recipeService.getRecipeById(recipe.getId());
 
             assertThat(result)
                     .isNotNull()
                     .satisfies(r -> {
-                        assertThat(r.getId()).isEqualTo(recipe.getId());
-                        assertThat(r.getName()).isEqualTo("Urso de Crochê");
+                        assertThat(r.id()).isEqualTo(recipe.getId());
+                        assertThat(r.name()).isEqualTo("Urso de Crochê");
                     });
             verify(recipeRepository).findById(recipe.getId());
-            verify(recipeMapper).toResponseDTO(recipe);
+            verify(recipeResponseMapper).toResponseDTO(recipe);
         }
 
         @Test
@@ -245,7 +276,7 @@ class RecipeServiceTest {
             List<Recipe> recipes = List.of(recipe2, recipe);
 
             when(recipeRepository.findAllByOrderByCreatedAtDesc()).thenReturn(recipes);
-            when(recipeMapper.toSummaryDTO(any())).thenReturn(summaryDTO);
+            when(recipeResponseMapper.toSummaryDTO(any())).thenReturn(summaryDTO);
 
             List<RecipeSummaryDTO> result = recipeService.getAllRecipes();
 
@@ -254,7 +285,7 @@ class RecipeServiceTest {
                     .isNotEmpty()
                     .hasSize(2);
             verify(recipeRepository).findAllByOrderByCreatedAtDesc();
-            verify(recipeMapper, times(2)).toSummaryDTO(any());
+            verify(recipeResponseMapper, times(2)).toSummaryDTO(any());
         }
 
         @Test
@@ -266,25 +297,25 @@ class RecipeServiceTest {
 
             assertThat(result).isEmpty();
             verify(recipeRepository).findAllByOrderByCreatedAtDesc();
-            verify(recipeMapper, never()).toSummaryDTO(any());
+            verify(recipeResponseMapper, never()).toSummaryDTO(any());
         }
 
         @Test
         @DisplayName("Deve mapear todos os elementos da lista com sucesso")
         void shouldMapAllRecrusToSummaryDTOSuccessfully() {
             List<Recipe> recipes = List.of(recipe, recipe2);
-            RecipeSummaryDTO summary1 = RecipeSummaryDTO.builder().id(recipe.getId()).build();
-            RecipeSummaryDTO summary2 = RecipeSummaryDTO.builder().id(recipe2.getId()).build();
+            RecipeSummaryDTO summary1 = new RecipeSummaryDTO(recipe.getId(), null, null, null, 0, 0, null, null, null, null);
+            RecipeSummaryDTO summary2 = new RecipeSummaryDTO(recipe2.getId(), null, null, null, 0, 0, null, null, null, null);
 
             when(recipeRepository.findAllByOrderByCreatedAtDesc()).thenReturn(recipes);
-            when(recipeMapper.toSummaryDTO(recipe)).thenReturn(summary1);
-            when(recipeMapper.toSummaryDTO(recipe2)).thenReturn(summary2);
+            when(recipeResponseMapper.toSummaryDTO(recipe)).thenReturn(summary1);
+            when(recipeResponseMapper.toSummaryDTO(recipe2)).thenReturn(summary2);
 
             List<RecipeSummaryDTO> result = recipeService.getAllRecipes();
 
             assertThat(result).hasSize(2);
-            assertThat(result.get(0).getId()).isEqualTo(recipe.getId());
-            assertThat(result.get(1).getId()).isEqualTo(recipe2.getId());
+            assertThat(result.get(0).id()).isEqualTo(recipe.getId());
+            assertThat(result.get(1).id()).isEqualTo(recipe2.getId());
         }
     }
 
@@ -296,20 +327,27 @@ class RecipeServiceTest {
         @DisplayName("Deve atualizar receita com sucesso")
         void shouldUpdateRecipeSuccessfully() {
             String recipeId = recipe.getId();
-            RecipeRequestDTO updateDTO = RecipeRequestDTO.builder()
-                    .name("Urso Atualizado")
-                    .build();
+            RecipeRequestDTO updateDTO = new RecipeRequestDTO(
+                    "Urso Atualizado",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
 
             when(recipeRepository.findById(recipeId)).thenReturn(Optional.of(recipe));
-            doNothing().when(recipeMapper).updateModel(recipe, updateDTO);
+            doNothing().when(recipeRequestMapper).updateModel(recipe, updateDTO);
             when(recipeRepository.save(recipe)).thenReturn(recipe);
-            when(recipeMapper.toResponseDTO(recipe)).thenReturn(responseDTO);
+            when(recipeResponseMapper.toResponseDTO(recipe)).thenReturn(responseDTO);
 
             RecipeResponseDTO result = recipeService.updateRecipe(recipeId, updateDTO);
 
             assertThat(result).isNotNull();
             verify(recipeRepository).findById(recipeId);
-            verify(recipeMapper).updateModel(recipe, updateDTO);
+            verify(recipeRequestMapper).updateModel(recipe, updateDTO);
             verify(recipeRepository).save(recipe);
         }
 
@@ -328,14 +366,21 @@ class RecipeServiceTest {
         @DisplayName("Deve atualizar parcialmente uma receita")
         void shouldUpdateRecipePartially() {
             String recipeId = recipe.getId();
-            RecipeRequestDTO partialUpdateDTO = RecipeRequestDTO.builder()
-                    .name("Novo Nome")
-                    .build();
+            RecipeRequestDTO partialUpdateDTO = new RecipeRequestDTO(
+                    "Novo Nome",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
 
             when(recipeRepository.findById(recipeId)).thenReturn(Optional.of(recipe));
-            doNothing().when(recipeMapper).updateModel(recipe, partialUpdateDTO);
+            doNothing().when(recipeRequestMapper).updateModel(recipe, partialUpdateDTO);
             when(recipeRepository.save(recipe)).thenReturn(recipe);
-            when(recipeMapper.toResponseDTO(recipe)).thenReturn(responseDTO);
+            when(recipeResponseMapper.toResponseDTO(recipe)).thenReturn(responseDTO);
 
             RecipeResponseDTO result = recipeService.updateRecipe(recipeId, partialUpdateDTO);
 
@@ -398,7 +443,7 @@ class RecipeServiceTest {
             List<Recipe> searchResults = List.of(recipe);
 
             when(recipeRepository.searchByKeyword(keyword)).thenReturn(searchResults);
-            when(recipeMapper.toSummaryDTO(recipe)).thenReturn(summaryDTO);
+            when(recipeResponseMapper.toSummaryDTO(recipe)).thenReturn(summaryDTO);
 
             List<RecipeSummaryDTO> result = recipeService.searchRecipes(keyword);
 
@@ -424,13 +469,13 @@ class RecipeServiceTest {
             List<Recipe> searchResults = List.of(recipe, recipe2);
 
             when(recipeRepository.searchByKeyword(keyword)).thenReturn(searchResults);
-            when(recipeMapper.toSummaryDTO(any())).thenReturn(summaryDTO);
+            when(recipeResponseMapper.toSummaryDTO(any())).thenReturn(summaryDTO);
 
             List<RecipeSummaryDTO> result = recipeService.searchRecipes(keyword);
 
             assertThat(result).hasSize(2);
             verify(recipeRepository).searchByKeyword(keyword);
-            verify(recipeMapper, times(2)).toSummaryDTO(any());
+            verify(recipeResponseMapper, times(2)).toSummaryDTO(any());
         }
 
         @Test
@@ -456,7 +501,7 @@ class RecipeServiceTest {
             List<Recipe> authorRecipes = List.of(recipe, recipe2);
 
             when(recipeRepository.findByAuthorNameIgnoreCase(author)).thenReturn(authorRecipes);
-            when(recipeMapper.toSummaryDTO(any())).thenReturn(summaryDTO);
+            when(recipeResponseMapper.toSummaryDTO(any())).thenReturn(summaryDTO);
 
             List<RecipeSummaryDTO> result = recipeService.getRecipesByAuthor(author);
 
@@ -480,7 +525,7 @@ class RecipeServiceTest {
         void shouldSearchAuthorCaseInsensitive() {
             String author = "maria silva";
             when(recipeRepository.findByAuthorNameIgnoreCase(author)).thenReturn(List.of(recipe));
-            when(recipeMapper.toSummaryDTO(recipe)).thenReturn(summaryDTO);
+            when(recipeResponseMapper.toSummaryDTO(recipe)).thenReturn(summaryDTO);
 
             List<RecipeSummaryDTO> result = recipeService.getRecipesByAuthor(author);
 
@@ -493,7 +538,7 @@ class RecipeServiceTest {
         void shouldReturnSingleRecipeWhenAuthorHasOne() {
             String author = "Maria Silva";
             when(recipeRepository.findByAuthorNameIgnoreCase(author)).thenReturn(List.of(recipe));
-            when(recipeMapper.toSummaryDTO(recipe)).thenReturn(summaryDTO);
+            when(recipeResponseMapper.toSummaryDTO(recipe)).thenReturn(summaryDTO);
 
             List<RecipeSummaryDTO> result = recipeService.getRecipesByAuthor(author);
 
@@ -512,7 +557,7 @@ class RecipeServiceTest {
             List<Recipe> recipesWithTags = List.of(recipe);
 
             when(recipeRepository.findByTagsIn(tags)).thenReturn(recipesWithTags);
-            when(recipeMapper.toSummaryDTO(recipe)).thenReturn(summaryDTO);
+            when(recipeResponseMapper.toSummaryDTO(recipe)).thenReturn(summaryDTO);
 
             List<RecipeSummaryDTO> result = recipeService.getRecipesByTags(tags);
 
@@ -538,7 +583,7 @@ class RecipeServiceTest {
             List<Recipe> recipes = List.of(recipe, recipe2);
 
             when(recipeRepository.findByTagsIn(tags)).thenReturn(recipes);
-            when(recipeMapper.toSummaryDTO(any())).thenReturn(summaryDTO);
+            when(recipeResponseMapper.toSummaryDTO(any())).thenReturn(summaryDTO);
 
             List<RecipeSummaryDTO> result = recipeService.getRecipesByTags(tags);
 
@@ -562,7 +607,7 @@ class RecipeServiceTest {
         void shouldSearchWithSingleTag() {
             List<String> tags = List.of("urso");
             when(recipeRepository.findByTagsIn(tags)).thenReturn(List.of(recipe));
-            when(recipeMapper.toSummaryDTO(recipe)).thenReturn(summaryDTO);
+            when(recipeResponseMapper.toSummaryDTO(recipe)).thenReturn(summaryDTO);
 
             List<RecipeSummaryDTO> result = recipeService.getRecipesByTags(tags);
 

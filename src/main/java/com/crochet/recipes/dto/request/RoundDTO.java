@@ -1,26 +1,17 @@
-package com.crochet.recipes.dto;
+package com.crochet.recipes.dto.request;
 
 import com.crochet.recipes.config.NoMongoInjection;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class RoundDTO {
-
+public record RoundDTO(
     @NotNull(message = "Número da volta é obrigatório")
     @Min(value = 1, message = "Número da volta deve ser maior que 0")
-    private Integer roundNumber;
+    Integer roundNumber,
 
     @NotBlank(message = "Descrição da volta é obrigatória")
     @NoMongoInjection
-    private String description;
-}
+    String description
+) {}
 

@@ -1,9 +1,9 @@
 package com.crochet.recipes.controller;
 
-import com.crochet.recipes.dto.ApiResponseDTO;
-import com.crochet.recipes.dto.RecipeRequestDTO;
-import com.crochet.recipes.dto.RecipeResponseDTO;
-import com.crochet.recipes.dto.RecipeSummaryDTO;
+import com.crochet.recipes.dto.response.ApiResponseDTO;
+import com.crochet.recipes.dto.request.RecipeRequestDTO;
+import com.crochet.recipes.dto.response.RecipeResponseDTO;
+import com.crochet.recipes.dto.response.RecipeSummaryDTO;
 import com.crochet.recipes.service.RecipeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

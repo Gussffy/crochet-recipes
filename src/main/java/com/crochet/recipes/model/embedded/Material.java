@@ -1,4 +1,4 @@
-package com.crochet.recipes.model;
+package com.crochet.recipes.model.embedded;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

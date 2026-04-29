@@ -1,5 +1,7 @@
 package com.crochet.recipes.model;
 
+import com.crochet.recipes.model.embedded.Material;
+import com.crochet.recipes.model.embedded.RecipePart;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

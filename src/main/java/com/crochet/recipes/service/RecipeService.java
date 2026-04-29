@@ -1,9 +1,11 @@
 package com.crochet.recipes.service;
 
-import com.crochet.recipes.dto.RecipeRequestDTO;
-import com.crochet.recipes.dto.RecipeResponseDTO;
-import com.crochet.recipes.dto.RecipeSummaryDTO;
+import com.crochet.recipes.dto.request.RecipeRequestDTO;
+import com.crochet.recipes.dto.response.RecipeResponseDTO;
+import com.crochet.recipes.dto.response.RecipeSummaryDTO;
 import com.crochet.recipes.exception.RecipeNotFoundException;
+import com.crochet.recipes.mapper.RecipeRequestMapper;
+import com.crochet.recipes.mapper.RecipeResponseMapper;
 import com.crochet.recipes.model.Recipe;
 import com.crochet.recipes.repository.RecipeRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,29 +21,30 @@ import java.util.stream.Collectors;
 public class RecipeService {
 
     private final RecipeRepository recipeRepository;
-    private final RecipeMapper recipeMapper;
+    private final RecipeRequestMapper recipeRequestMapper;
+    private final RecipeResponseMapper recipeResponseMapper;
 
     public RecipeResponseDTO createRecipe(RecipeRequestDTO requestDTO) {
-        log.info("Criando nova receita: {}", requestDTO.getName());
+        log.info("Criando nova receita: {}", requestDTO.name());
 
-        Recipe recipe = recipeMapper.toModel(requestDTO);
+        Recipe recipe = recipeRequestMapper.toModel(requestDTO);
         Recipe saved = recipeRepository.save(recipe);
 
         log.info("Receita criada com sucesso. ID: {}", saved.getId());
-        return recipeMapper.toResponseDTO(saved);
+        return recipeResponseMapper.toResponseDTO(saved);
     }
 
     public RecipeResponseDTO getRecipeById(String id) {
         log.info("Buscando receita por ID: {}", id);
         Recipe recipe = findRecipeOrThrow(id);
-        return recipeMapper.toResponseDTO(recipe);
+        return recipeResponseMapper.toResponseDTO(recipe);
     }
 
     public List<RecipeSummaryDTO> getAllRecipes() {
         log.info("Listando todas as receitas");
         return recipeRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
-                .map(recipeMapper::toSummaryDTO)
+                .map(recipeResponseMapper::toSummaryDTO)
                 .collect(Collectors.toList());
     }
 
@@ -49,11 +52,11 @@ public class RecipeService {
         log.info("Atualizando receita ID: {}", id);
 
         Recipe recipe = findRecipeOrThrow(id);
-        recipeMapper.updateModel(recipe, requestDTO);
+        recipeRequestMapper.updateModel(recipe, requestDTO);
         Recipe saved = recipeRepository.save(recipe);
 
         log.info("Receita atualizada com sucesso. ID: {}", saved.getId());
-        return recipeMapper.toResponseDTO(saved);
+        return recipeResponseMapper.toResponseDTO(saved);
     }
 
     public void deleteRecipe(String id) {
@@ -67,7 +70,7 @@ public class RecipeService {
         log.info("Pesquisando receitas com keyword: {}", keyword);
         return recipeRepository.searchByKeyword(keyword)
                 .stream()
-                .map(recipeMapper::toSummaryDTO)
+                .map(recipeResponseMapper::toSummaryDTO)
                 .collect(Collectors.toList());
     }
 
@@ -75,7 +78,7 @@ public class RecipeService {
         log.info("Buscando receitas do autor: {}", authorName);
         return recipeRepository.findByAuthorNameIgnoreCase(authorName)
                 .stream()
-                .map(recipeMapper::toSummaryDTO)
+                .map(recipeResponseMapper::toSummaryDTO)
                 .collect(Collectors.toList());
     }
 
@@ -83,7 +86,7 @@ public class RecipeService {
         log.info("Buscando receitas por tags: {}", tags);
         return recipeRepository.findByTagsIn(tags)
                 .stream()
-                .map(recipeMapper::toSummaryDTO)
+                .map(recipeResponseMapper::toSummaryDTO)
                 .collect(Collectors.toList());
     }
 
