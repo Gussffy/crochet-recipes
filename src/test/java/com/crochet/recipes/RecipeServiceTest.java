@@ -302,7 +302,7 @@ class RecipeServiceTest {
 
         @Test
         @DisplayName("Deve mapear todos os elementos da lista com sucesso")
-        void shouldMapAllRecrusToSummaryDTOSuccessfully() {
+        void shouldMapAllRecipesToSummaryDTOSuccessfully() {
             List<Recipe> recipes = List.of(recipe, recipe2);
             RecipeSummaryDTO summary1 = new RecipeSummaryDTO(recipe.getId(), null, null, null, 0, 0, null, null, null, null);
             RecipeSummaryDTO summary2 = new RecipeSummaryDTO(recipe2.getId(), null, null, null, 0, 0, null, null, null, null);

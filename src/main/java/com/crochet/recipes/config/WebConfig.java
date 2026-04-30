@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.util.Arrays;
+
 @Slf4j
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -24,15 +26,22 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        String[] origins = allowedOrigins.split(",");
-        String[] methods = allowedMethods.split(",");
+        String[] origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .toArray(String[]::new);
+        String[] methods = Arrays.stream(allowedMethods.split(","))
+                .map(String::trim)
+                .toArray(String[]::new);
+        String[] headers = Arrays.stream(allowedHeaders.split(","))
+                .map(String::trim)
+                .toArray(String[]::new);
 
         log.info("Configurando CORS para origins: {}", allowedOrigins);
 
         registry.addMapping("/api/**")
             .allowedOrigins(origins)
             .allowedMethods(methods)
-            .allowedHeaders(allowedHeaders.split(","))
+            .allowedHeaders(headers)
             .allowCredentials(true)
             .maxAge(maxAge);
     }
