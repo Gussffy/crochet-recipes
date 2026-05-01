@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -43,6 +45,15 @@ public class RecipeController {
         List<RecipeSummaryDTO> recipes = recipeService.getAllRecipes();
         return ResponseEntity.ok(ApiResponseDTO.success(recipes,
                 recipes.size() + " receita(s) encontrada(s)"));
+    }
+
+    @GetMapping("/paginated")
+    @Operation(summary = "Listar receitas com paginação", description = "Retorna receitas com suporte a paginação")
+    public ResponseEntity<ApiResponseDTO<Page<RecipeSummaryDTO>>> getAllRecipesPaginated(Pageable pageable) {
+        log.info("Listando receitas paginadas");
+        Page<RecipeSummaryDTO> recipes = recipeService.getAllRecipesPaginated(pageable);
+        return ResponseEntity.ok(ApiResponseDTO.success(recipes,
+                "Página " + (recipes.getPageable().getPageNumber() + 1) + " de " + recipes.getTotalPages()));
     }
 
     @GetMapping("/{id}")
@@ -83,6 +94,17 @@ public class RecipeController {
                 recipes.size() + " receita(s) encontrada(s) para: " + keyword));
     }
 
+    @GetMapping("/search/paginated")
+    @Operation(summary = "Pesquisar receitas com paginação", description = "Pesquisa receitas com suporte a paginação")
+    public ResponseEntity<ApiResponseDTO<Page<RecipeSummaryDTO>>> searchRecipesPaginated(
+            @Parameter(description = "Palavra-chave para pesquisa") @RequestParam String keyword,
+            Pageable pageable) {
+
+        Page<RecipeSummaryDTO> recipes = recipeService.searchRecipesPaginated(keyword, pageable);
+        return ResponseEntity.ok(ApiResponseDTO.success(recipes,
+                recipes.getTotalElements() + " receita(s) encontrada(s) para: " + keyword));
+    }
+
     @GetMapping("/author/{authorName}")
     @Operation(summary = "Buscar receitas por autor")
     public ResponseEntity<ApiResponseDTO<List<RecipeSummaryDTO>>> getByAuthor(
@@ -93,6 +115,16 @@ public class RecipeController {
                 recipes.size() + " receita(s) de " + authorName));
     }
 
+    @GetMapping("/author/{authorName}/paginated")
+    @Operation(summary = "Buscar receitas por autor com paginação")
+    public ResponseEntity<ApiResponseDTO<Page<RecipeSummaryDTO>>> getByAuthorPaginated(
+            @Parameter(description = "Nome do autor") @PathVariable String authorName,
+            Pageable pageable) {
+
+        Page<RecipeSummaryDTO> recipes = recipeService.getRecipesByAuthorPaginated(authorName, pageable);
+        return ResponseEntity.ok(ApiResponseDTO.success(recipes,
+                recipes.getTotalElements() + " receita(s) de " + authorName));
+    }
 
     @GetMapping("/tags")
     @Operation(summary = "Buscar receitas por tags")
@@ -102,5 +134,16 @@ public class RecipeController {
         List<RecipeSummaryDTO> recipes = recipeService.getRecipesByTags(tags);
         return ResponseEntity.ok(ApiResponseDTO.success(recipes,
                 recipes.size() + " receita(s) encontrada(s)"));
+    }
+
+    @GetMapping("/tags/paginated")
+    @Operation(summary = "Buscar receitas por tags com paginação")
+    public ResponseEntity<ApiResponseDTO<Page<RecipeSummaryDTO>>> getByTagsPaginated(
+            @Parameter(description = "Lista de tags") @RequestParam List<String> tags,
+            Pageable pageable) {
+
+        Page<RecipeSummaryDTO> recipes = recipeService.getRecipesByTagsPaginated(tags, pageable);
+        return ResponseEntity.ok(ApiResponseDTO.success(recipes,
+                recipes.getTotalElements() + " receita(s) encontrada(s)"));
     }
 }

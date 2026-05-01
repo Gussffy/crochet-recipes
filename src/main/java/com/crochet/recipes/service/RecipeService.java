@@ -10,6 +10,8 @@ import com.crochet.recipes.model.Recipe;
 import com.crochet.recipes.repository.RecipeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -48,6 +50,12 @@ public class RecipeService {
                 .collect(Collectors.toList());
     }
 
+    public Page<RecipeSummaryDTO> getAllRecipesPaginated(Pageable pageable) {
+        log.info("Listando receitas com paginação: page={}, size={}", pageable.getPageNumber(), pageable.getPageSize());
+        return recipeRepository.findAllByOrderByCreatedAtDesc(pageable)
+                .map(recipeResponseMapper::toSummaryDTO);
+    }
+
     public RecipeResponseDTO updateRecipe(String id, RecipeRequestDTO requestDTO) {
         log.info("Atualizando receita ID: {}", id);
 
@@ -74,6 +82,12 @@ public class RecipeService {
                 .collect(Collectors.toList());
     }
 
+    public Page<RecipeSummaryDTO> searchRecipesPaginated(String keyword, Pageable pageable) {
+        log.info("Pesquisando receitas com keyword: {} (paginado)", keyword);
+        return recipeRepository.searchByKeyword(keyword, pageable)
+                .map(recipeResponseMapper::toSummaryDTO);
+    }
+
     public List<RecipeSummaryDTO> getRecipesByAuthor(String authorName) {
         log.info("Buscando receitas do autor: {}", authorName);
         return recipeRepository.findByAuthorNameIgnoreCase(authorName)
@@ -82,12 +96,24 @@ public class RecipeService {
                 .collect(Collectors.toList());
     }
 
+    public Page<RecipeSummaryDTO> getRecipesByAuthorPaginated(String authorName, Pageable pageable) {
+        log.info("Buscando receitas do autor: {} (paginado)", authorName);
+        return recipeRepository.findByAuthorNameIgnoreCase(authorName, pageable)
+                .map(recipeResponseMapper::toSummaryDTO);
+    }
+
     public List<RecipeSummaryDTO> getRecipesByTags(List<String> tags) {
         log.info("Buscando receitas por tags: {}", tags);
         return recipeRepository.findByTagsIn(tags)
                 .stream()
                 .map(recipeResponseMapper::toSummaryDTO)
                 .collect(Collectors.toList());
+    }
+
+    public Page<RecipeSummaryDTO> getRecipesByTagsPaginated(List<String> tags, Pageable pageable) {
+        log.info("Buscando receitas por tags: {} (paginado)", tags);
+        return recipeRepository.findByTagsIn(tags, pageable)
+                .map(recipeResponseMapper::toSummaryDTO);
     }
 
     private Recipe findRecipeOrThrow(String id) {
