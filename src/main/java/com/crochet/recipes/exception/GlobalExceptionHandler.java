@@ -43,6 +43,47 @@ public class GlobalExceptionHandler {
             .body(ApiResponseDTO.error(details));
     }
 
+    @ExceptionHandler(JwtAuthenticationException.class)
+    public ResponseEntity<ApiResponseDTO<ErrorDetailsDTO>> handleJwtAuthenticationException(
+            JwtAuthenticationException ex, HttpServletRequest request) {
+
+        String traceId = UUID.randomUUID().toString();
+        log.warn("[{}] Erro de autenticação JWT: {}", traceId, ex.getMessage());
+
+        ErrorDetailsDTO details = ErrorDetailsDTO.builder()
+            .code("JWT_AUTHENTICATION_ERROR")
+            .message(ex.getMessage())
+            .httpStatus(401)
+            .timestamp(LocalDateTime.now())
+            .traceId(traceId)
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(ApiResponseDTO.error(details));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiResponseDTO<ErrorDetailsDTO>> handleUserNotFound(
+            UserNotFoundException ex, HttpServletRequest request) {
+
+        String traceId = UUID.randomUUID().toString();
+        log.warn("[{}] Usuário não encontrado: {}", traceId, ex.getMessage());
+
+        ErrorDetailsDTO details = ErrorDetailsDTO.builder()
+            .code("USER_NOT_FOUND")
+            .message(ex.getMessage())
+            .httpStatus(404)
+            .timestamp(LocalDateTime.now())
+            .traceId(traceId)
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ApiResponseDTO.error(details));
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponseDTO<ValidationErrorDTO>> handleValidationErrors(
