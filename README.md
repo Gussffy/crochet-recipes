@@ -24,7 +24,8 @@ Sistema para publicacao e gerenciamento de receitas de croche com Spring Boot, M
 |---|---|---|
 | Java | 21 | Linguagem principal |
 | Spring Boot | 4.0.3 | API REST |
-| Spring Data MongoDB | 3.x | Persistencia || Spring Security | 7.0.3 | Autenticacao e autorizacao |
+| Spring Data MongoDB | 3.x | Persistencia |
+| Spring Security | 7.0.3 | Autenticacao e autorizacao |
 | JJWT | 0.12.3 | JWT (JSON Web Tokens) |
 | MongoDB | 7.x | Banco de dados |
 | Springdoc OpenAPI | 2.8.6 | Swagger UI |
