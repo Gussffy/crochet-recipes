@@ -27,8 +27,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado com email: " + email));
 
+        // Todos os usuários têm acesso completo
         Collection<? extends GrantedAuthority> authorities = Collections.singletonList(
-                new SimpleGrantedAuthority("ROLE_" + user.getRole())
+                new SimpleGrantedAuthority("ROLE_USER")
         );
 
         return org.springframework.security.core.userdetails.User.builder()

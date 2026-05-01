@@ -18,7 +18,6 @@ public class User {
     private String id;
     private String email;
     private String password;
-    private String role; // ADMIN, DEMO
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -1,6 +1,7 @@
 package com.crochet.recipes.controller;
 
 import com.crochet.recipes.dto.request.LoginRequestDTO;
+import com.crochet.recipes.dto.request.RegisterRequestDTO;
 import com.crochet.recipes.dto.response.ApiResponseDTO;
 import com.crochet.recipes.dto.response.LoginResponseDTO;
 import com.crochet.recipes.service.AuthenticationService;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Tag(name = "Autenticação", description = "Endpoints de login e autenticação JWT")
+@Tag(name = "Autenticação", description = "Endpoints de login e registro")
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
@@ -34,18 +35,17 @@ public class AuthenticationController {
                 .ok(ApiResponseDTO.success(response, "Login realizado com sucesso!"));
     }
 
-    @GetMapping("/demo-credentials")
-    @Operation(summary = "Credenciais DEMO", description = "Retorna as credenciais do usuário DEMO (usado para testes)")
-    public ResponseEntity<ApiResponseDTO<Object>> getDemoCredentials() {
+    @PostMapping("/register")
+    @Operation(summary = "Registro", description = "Cria novo usuário e retorna JWT token")
+    public ResponseEntity<ApiResponseDTO<LoginResponseDTO>> register(
+            @Valid @RequestBody RegisterRequestDTO requestDTO) {
+
+        log.info("Requisição de registro para: {}", requestDTO.email());
+        LoginResponseDTO response = authenticationService.register(requestDTO);
+
         return ResponseEntity
-                .ok(ApiResponseDTO.success(
-                        new Object() {
-                            public String email = "demo@crochet.com";
-                            public String password = "demo123";
-                            public String role = "DEMO";
-                        },
-                        "Credenciais do usuário DEMO"
-                ));
+                .status(HttpStatus.CREATED)
+                .body(ApiResponseDTO.success(response, "Usuário registrado com sucesso!"));
     }
 }
 

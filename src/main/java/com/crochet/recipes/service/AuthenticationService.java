@@ -1,8 +1,10 @@
 package com.crochet.recipes.service;
 
 import com.crochet.recipes.dto.request.LoginRequestDTO;
+import com.crochet.recipes.dto.request.RegisterRequestDTO;
 import com.crochet.recipes.dto.response.LoginResponseDTO;
 import com.crochet.recipes.exception.JwtAuthenticationException;
+import com.crochet.recipes.exception.UserAlreadyExistsException;
 import com.crochet.recipes.model.User;
 import com.crochet.recipes.repository.UserRepository;
 import com.crochet.recipes.security.JwtProvider;
@@ -12,6 +14,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,6 +27,7 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public LoginResponseDTO login(LoginRequestDTO requestDTO) {
         log.info("Tentativa de login para: {}", requestDTO.email());
@@ -45,7 +49,7 @@ public class AuthenticationService {
             return new LoginResponseDTO(
                     token,
                     user.getEmail(),
-                    user.getRole(),
+                    "USER",
                     "Bearer"
             );
         } catch (AuthenticationException ex) {
@@ -54,41 +58,33 @@ public class AuthenticationService {
         }
     }
 
-    public User createAdminUser(String email, String password) {
-        if (userRepository.findByEmail(email).isPresent()) {
-            log.warn("Tentativa de criar admin com email duplicado: {}", email);
-            return userRepository.findByEmail(email).get();
+    public LoginResponseDTO register(RegisterRequestDTO requestDTO) {
+        log.info("Tentativa de registro para: {}", requestDTO.email());
+
+        // Validar se senhas conferem
+        if (!requestDTO.password().equals(requestDTO.passwordConfirm())) {
+            throw new JwtAuthenticationException("As senhas não conferem");
         }
 
-        User admin = User.builder()
-                .email(email)
-                .password(password) // Deve estar codificado
-                .role("ADMIN")
+        // Validar se usuário já existe
+        if (userRepository.findByEmail(requestDTO.email()).isPresent()) {
+            log.warn("Tentativa de registrar email duplicado: {}", requestDTO.email());
+            throw new UserAlreadyExistsException("Email já cadastrado: " + requestDTO.email());
+        }
+
+        // Criar novo usuário
+        User newUser = User.builder()
+                .email(requestDTO.email())
+                .password(passwordEncoder.encode(requestDTO.password()))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        log.info("Admin criado: {}", email);
-        return userRepository.save(admin);
-    }
+        User savedUser = userRepository.save(newUser);
+        log.info("Novo usuário registrado: {}", requestDTO.email());
 
-    public User createDemoUser() {
-        String demoEmail = "demo@crochet.com";
-
-        if (userRepository.findByEmail(demoEmail).isPresent()) {
-            return userRepository.findByEmail(demoEmail).get();
-        }
-
-        User demo = User.builder()
-                .email(demoEmail)
-                .password("demo123") // Deve estar codificado
-                .role("DEMO")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        log.info("Usuário DEMO criado: {}", demoEmail);
-        return userRepository.save(demo);
+        // Fazer login automático
+        return login(new LoginRequestDTO(requestDTO.email(), requestDTO.password()));
     }
 }
 

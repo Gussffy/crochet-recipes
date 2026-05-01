@@ -136,4 +136,25 @@ public class GlobalExceptionHandler {
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(ApiResponseDTO.error(details));
     }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ApiResponseDTO<ErrorDetailsDTO>> handleUserAlreadyExists(
+            UserAlreadyExistsException ex, HttpServletRequest request) {
+
+        String traceId = UUID.randomUUID().toString();
+        log.warn("[{}] Tentativa de criar usuário duplicado: {}", traceId, ex.getMessage());
+
+        ErrorDetailsDTO details = ErrorDetailsDTO.builder()
+            .code("USER_ALREADY_EXISTS")
+            .message(ex.getMessage())
+            .httpStatus(409)
+            .timestamp(LocalDateTime.now())
+            .traceId(traceId)
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(ApiResponseDTO.error(details));
+    }
 }

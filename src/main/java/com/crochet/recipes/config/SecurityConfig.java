@@ -59,10 +59,10 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        // Admin - criar, editar, deletar receitas
-                        .requestMatchers(HttpMethod.POST, "/api/v1/recipes").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/recipes/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/recipes/**").hasRole("ADMIN")
+                        // Criar, editar, deletar receitas - requer autenticação
+                        .requestMatchers(HttpMethod.POST, "/api/v1/recipes").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/recipes/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/recipes/**").authenticated()
 
                         // Qualquer outro endpoint requer autenticação
                         .anyRequest().authenticated()
